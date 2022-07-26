@@ -2,8 +2,8 @@ beforeEach(() => {
 	cy.cleardb();
 });
 
-describe("Login", () => {
-	it("should login successfully", () => {
+describe("create recommendation", () => {
+	it("new recommendation should appear", () => {
 		cy.visit("http://localhost:3000/");
 
 		cy.get('input[placeholder="Name"]').type("Recommendation");
