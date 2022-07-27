@@ -9,6 +9,6 @@ describe("create recommendation", () => {
 		cy.get('input[placeholder="Name"]').type("Recommendation");
 		cy.get('input[placeholder="https://youtu.be/..."]').type("https://www.youtube.com/watch?v=pjX3J9EpAr0");
 		cy.get("button").click();
-		cy.get('[data-cy="recommendation-video"]').should('be.visible');
+		cy.get('article').should('be.visible');
 	});
 });
