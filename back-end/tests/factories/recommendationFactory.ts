@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
-import { CreateRecommendationData } from "../../src/services/recommendationsService";
+import { prisma } from "../../src/database.js";
+import { CreateRecommendationData } from "../../src/services/recommendationsService.js";
 
 function recommendationBody(){
 
@@ -21,7 +22,33 @@ function recommendationBodyWrong(){
     return recommendation;
 };
 
+async function getRecommendation(name:string){
+    return await prisma.recommendation.findUnique({
+        where: { name }
+    })
+}
+
+async function createRecommendation(){
+    const body = recommendationBody(); 
+
+    return await prisma.recommendation.create({
+        data: body,
+      });
+};
+
+async function setRecommendationScore(id:number,score:number) {
+    return await prisma.recommendation.update({
+        where: { id },
+        data: {
+          score:  score ,
+        }
+    });
+}
+
 export const recommendationFactory = {
     recommendationBody,
-    recommendationBodyWrong
+    recommendationBodyWrong,
+    getRecommendation,
+    createRecommendation,
+    setRecommendationScore
 }
