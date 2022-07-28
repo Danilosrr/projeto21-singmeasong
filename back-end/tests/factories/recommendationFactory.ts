@@ -36,6 +36,16 @@ async function createRecommendation(){
       });
 };
 
+async function createRecommendations(times:number){
+    const ids=[];
+    for (let i=0; i<times; i++) {
+        const body = recommendationBody(); 
+        const recommendation = await prisma.recommendation.create({ data: body });
+        ids.push(recommendation.id);
+    };
+    return ids;
+};
+
 async function setRecommendationScore(id:number,score:number) {
     return await prisma.recommendation.update({
         where: { id },
@@ -50,5 +60,6 @@ export const recommendationFactory = {
     recommendationBodyWrong,
     getRecommendation,
     createRecommendation,
+    createRecommendations,
     setRecommendationScore
 }

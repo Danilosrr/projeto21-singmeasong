@@ -11,14 +11,14 @@ describe("POST /recommendations", () => {
     const requestBody = recommendationFactory.recommendationBody();
     const badrequestBody = recommendationFactory.recommendationBodyWrong();
 
-    it("should return a status 201", async () => {
+    it("successful post expect a status 201", async () => {
         const response = await supertest(app).post("/recommendations").send(
             requestBody
         )
         expect(response.status).toBe(201);
     });
 
-    it("should return a status 422", async () => {
+    it("schema missmatch expect a status 422", async () => {
         const response = await supertest(app).post("/recommendations").send(
             badrequestBody
         )
@@ -26,43 +26,49 @@ describe("POST /recommendations", () => {
     });
 });
 
+describe("GET /recommendations", () => {  
+    const requestBody = recommendationFactory.recommendationBody();
+    const badrequestBody = recommendationFactory.recommendationBodyWrong();
+
+    it("successful get expect a status 200", async () => {
+        const response = await supertest(app).get("/recommendations")
+        expect(Array.isArray(response.body)).toBe(true);
+        expect(response.status).toBe(200);
+    });
+});
+
 describe("POST /recommendations/:id/upvote", () => {  
 
-    it("should return a status 200", async () => {
+    it("successful upvote expect a status 200", async () => {
         const recommendation = await recommendationFactory.createRecommendation();
 
         const response = await supertest(app).post(`/recommendations/${+recommendation.id}/upvote`);
+
+        const upvote = await recommendationFactory.getRecommendation(recommendation.name);
+        expect(upvote.score).toBe(1);
         expect(response.status).toBe(200);
     });
 
-    it("should return a status 200", async () => {
-        const recommendation = await recommendationFactory.createRecommendation();
+    it("id not registered expect a status 404", async () => {
 
-        const upvote = await supertest(app).post(`/recommendations/${+recommendation.id}/upvote`);
-        const response = await recommendationFactory.getRecommendation(recommendation.name);
-        console.log(response)
-        expect(response.score).toBe(1);
+        const response = await supertest(app).post(`/recommendations/99/upvote`);
+
+        expect(response.status).toBe(404);
     });
 });
 
 describe("POST /recommendations/:id/downvote", () => {  
     
-    it("should return a status 200", async () => {
+    it("successful downvote expect a status 200", async () => {
         const recommendation = await recommendationFactory.createRecommendation();
 
         const response = await supertest(app).post(`/recommendations/${+recommendation.id}/downvote`);
+        const downvote = await recommendationFactory.getRecommendation(recommendation.name);
+        expect(downvote.score).toBe(-1)
         expect(response.status).toBe(200);
     });
 
-    it("should return a status 200", async () => {
-        const recommendation = await recommendationFactory.createRecommendation();
-
-        const downvote = await supertest(app).post(`/recommendations/${+recommendation.id}/downvote`);
-        const response = await recommendationFactory.getRecommendation(recommendation.name);
-        expect(response.score).toBe(-1);
-    });
-
-    it("should delete recommendation when score < -5", async () => {
+    it("expect to delete recommendation when score < -5", async () => {
         const recommendation = await recommendationFactory.createRecommendation();
 
         const setDownVotes = await recommendationFactory.setRecommendationScore(recommendation.id,-5);
@@ -71,5 +77,47 @@ describe("POST /recommendations/:id/downvote", () => {
         const checkDatabase = await recommendationFactory.getRecommendation(recommendation.name);
         console.log(checkDatabase)
         expect(checkDatabase).toBe(null);
+    });
+});
+
+describe("GET /recommendations/:id", () => {  
+    
+    it("successful request expect a status 200", async () => {
+        const recommendation = await recommendationFactory.createRecommendation();
+        
+        const response =  await supertest(app).get(`/recommendations/${+recommendation.id}`);
+        expect(response.status).toBe(200);
+    });
+
+    it("id not registered expect a status 404", async () => {        
+        const response =  await supertest(app).get(`/recommendations/99`);
+        expect(response.status).toBe(404);
+    });
+});
+
+describe("GET /recommendations/top/:amount", () => {  
+    const amount = 3
+    it("successful request expect a status 200", async () => {
+        const recommendation = await recommendationFactory.createRecommendations(+amount);
+
+        const response =  await supertest(app).get(`/recommendations/top/${+amount}`);
+        expect(response.body.length).toBe(+amount);
+        expect(response.status).toBe(200);
+    });
+});
+
+describe("GET /recommendations/random", () => {  
+    const amount = 10
+    it("successful request expect a status 200", async () => {
+        const recommendations = await recommendationFactory.createRecommendations(+amount);
+
+        const response =  await supertest(app).get(`/recommendations/random`);
+        expect(recommendations.includes(response.body.id)).toBe(true);
+        expect(response.status).toBe(200);
+    });
+
+    it("no recommendation registered expect a status 404", async () => {
+        const response =  await supertest(app).get(`/recommendations/random`);
+        expect(response.status).toBe(404);
     });
 });
