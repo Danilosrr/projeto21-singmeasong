@@ -1,7 +1,7 @@
 import supertest from "supertest";
-import app from "../src/app.js";
-import { prisma } from "../src/database.js";
-import { recommendationFactory } from "./factories/recommendationFactory.js";
+import app from "../../src/app.js";
+import { prisma } from "../../src/database.js";
+import { recommendationFactory } from "../factories/recommendationFactory.js";
 
 beforeEach( async () => {
     await prisma.$executeRaw`TRUNCATE TABLE "recommendations";`;
