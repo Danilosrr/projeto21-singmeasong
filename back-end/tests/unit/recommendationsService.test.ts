@@ -7,7 +7,7 @@ import { recommendationFactory } from "../factories/recommendationFactory.js";
 jest.mock("../../src/repositories/recommendationRepository");
 
 describe("get", () => {
-    it("expect to call function", async () => {        
+    it("expect to call findAll function", async () => {        
         const findAll = jest.spyOn(recommendationRepository,"findAll").mockImplementationOnce(():any=>{})
 
         await recommendationService.get();
@@ -16,7 +16,7 @@ describe("get", () => {
 });
 
 describe("getTop", () => {
-    it("expect to call function", async () => {    
+    it("expect to call getAmountByScore function", async () => {    
         const amount = 9    
         const getAmountByScore = jest.spyOn(recommendationRepository,"getAmountByScore").mockImplementationOnce(():any=>{})
 
@@ -25,20 +25,59 @@ describe("getTop", () => {
     });
 });
 
-describe("Insert Recommendations", () => {
+describe("insert", () => {
     const create = jest.spyOn(recommendationRepository, "create").mockImplementationOnce(():any=>{});
     const recommendation = recommendationFactory.recommendationBody();
 
-    it("expect to call function", async () => {
+    it("expect to call create function", async () => {
         jest.spyOn(recommendationRepository, "findByName").mockImplementationOnce(():any=> false );
 
         await recommendationService.insert(recommendation);
         expect(create).toHaveBeenCalled();
     });
   
-    it("expect to call function", async () => {
+    it("expect to throw error", async () => {
         jest.spyOn(recommendationRepository, "findByName").mockImplementationOnce(():any=> recommendation );
 
         expect(recommendationService.insert(recommendation)).rejects.toEqual({message: "Recommendations names must be unique", type: "conflict"});
+    });
+});
+
+describe("upvote/downvote", () => {
+    const id=1;
+    const recommendation = recommendationFactory.recommendationBody();
+
+    it("expect to call updateScore function", async () => {
+        jest.spyOn(recommendationRepository, "findByName").mockImplementationOnce(():any=> false );
+        jest.spyOn(recommendationRepository, "find").mockImplementationOnce(():any=> true );
+        jest.spyOn(recommendationRepository, "updateScore").mockImplementationOnce(():any=> {});
+
+        await recommendationService.upvote(id);
+        expect(recommendationRepository.updateScore).toHaveBeenCalled();
+    });
+
+    it("expect to call remove function", async () => {
+        jest.spyOn(recommendationRepository, "findByName").mockImplementationOnce(():any=> false );
+        jest.spyOn(recommendationRepository, "find").mockImplementationOnce(():any=> true );
+        jest.spyOn(recommendationRepository, "remove").mockImplementationOnce(():any=> {} );
+        jest.spyOn(recommendationRepository, "updateScore").mockImplementationOnce(():any=> {
+            return {
+                id, 
+                ...recommendation,
+                score:-6
+            }
+        });
+
+        await recommendationService.downvote(id);
+        expect(recommendationRepository.updateScore).toHaveBeenCalled();
+        expect(recommendationRepository.remove).toHaveBeenCalled();
+    });
+
+    it("expect to throw error", async () => {
+        jest.spyOn(recommendationRepository, "findByName").mockImplementationOnce(():any=> false );
+        jest.spyOn(recommendationRepository, "find").mockImplementationOnce(():any=> false );
+       
+
+        expect(recommendationService.downvote(id)).rejects.toEqual({message: "", type: "not_found"});
     });
 });
