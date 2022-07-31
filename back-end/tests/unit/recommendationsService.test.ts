@@ -81,3 +81,44 @@ describe("upvote/downvote", () => {
         expect(recommendationService.downvote(id)).rejects.toEqual({message: "", type: "not_found"});
     });
 });
+
+describe("getRandom", () => {   
+    const recommendation1 = recommendationFactory.recommendationBody();
+    const recommendation2 = recommendationFactory.recommendationBody();
+     
+    it("expect a list of recommendations", async () => {
+        jest.spyOn(Math, "random").mockReturnValueOnce(0.9);
+
+        const findAll = jest.spyOn(recommendationRepository, "findAll").mockImplementationOnce(():any=> [recommendation1,recommendation2]);
+  
+        const response = await recommendationService.getRandom();
+        expect(response).toBe(recommendation1);
+    });
+
+    it("expect a list of recommendations", async () => {
+        jest.spyOn(Math, "random").mockReturnValueOnce(0.2);
+
+        const findAll = jest.spyOn(recommendationRepository, "findAll").mockImplementationOnce(():any=> [recommendation1,recommendation2]);
+  
+        const response = await recommendationService.getRandom();
+        expect(response).toBe(recommendation2);
+    });
+
+    it("expect to throw error", () => {
+        jest.spyOn(Math, "random").mockReturnValueOnce(0.9);
+        jest.spyOn(recommendationRepository, "findAll").mockResolvedValue([]);
+  
+        expect(recommendationService.getRandom()).rejects.toEqual(
+            {message: "", type: "not_found"}
+        );
+    })
+
+    it("expect to throw error", () => {
+        jest.spyOn(Math, "random").mockReturnValueOnce(0.2);
+        jest.spyOn(recommendationRepository, "findAll").mockResolvedValue([]);
+  
+        expect(recommendationService.getRandom()).rejects.toEqual(
+            {message: "", type: "not_found"}
+        );
+    })
+});
